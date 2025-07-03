@@ -77,14 +77,39 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+Future<void> downloadAndSaveImage() async {
+ const url = 'http://localhost:8080/api/wallpaper';
+ const savePath = '/home/dev/background-sync-backgrounds/current.jpeg';
+ 
+  try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final file = File(savePath);
+        await file.writeAsBytes(response.bodyBytes);
+        print('saved');
+      } else {
+        print('Failed  ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+ 
+ 
+
+}
+
+Future<void> syncWallPaper() async{
+ 
+    await downloadAndSaveImage();
+    const imagePath ='/home/dev/background-sync-backgrounds/current.jpeg';
+    changeWallpaper(imagePath);
+}
+
 void _startRequestLoop() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       try {
-        final res = await http.get(Uri.parse('http://localhost:8080'));
-        setState(() {
-          _response = res.body;
-        });
-      } catch (e) {
+         await syncWallPaper();
+       } catch (e) {
         setState(() {
           _response = 'Error: $e';
         });
@@ -103,8 +128,6 @@ void _startRequestLoop() {
 
   
   void _onButtonPressed() {
-    const imagePath ='/home/dev/Pictures/wallpaper.jpeg';
-    changeWallpaper(imagePath);
   }
 
   @override

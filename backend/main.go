@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"log"
 	"os"
 	"path/filepath"
@@ -8,8 +9,20 @@ import (
 	"net/http"
 )
 
+func getPath() string {
+    seconds := time.Now().Unix()
+    if seconds % 2 == 0{
+	 return "./static/wallpaper1.jpeg"    
+    }else{
+	return "./static/wallpaper2.jpeg" 
+    }
+ 
+
+}
+
+
 func imageHandler(w http.ResponseWriter, r *http.Request) {
-    imagePath := "./static/wallpaper1.jpeg" // Replace with your image path
+    imagePath := getPath()    
     file, err := os.Open(imagePath)
     if err != nil {
         http.Error(w, "Image not found.", http.StatusNotFound)
