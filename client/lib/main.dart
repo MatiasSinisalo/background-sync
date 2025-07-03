@@ -60,7 +60,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Timer? _timer;
   String _response = 'Waiting for response...';
-  
   int _counter = 0;
   
   
@@ -86,6 +85,9 @@ Future<void> downloadAndSaveImage() async {
       if (response.statusCode == 200) {
         final file = File(savePath);
         await file.writeAsBytes(response.bodyBytes);
+        setState((){
+          _response = "Wallpaper updated!";
+        });
         print('saved');
       } else {
         print('Failed  ${response.statusCode}');
@@ -167,7 +169,7 @@ void _startRequestLoop() {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
+          Text(
           _response,
           textAlign: TextAlign.center,
             ),
