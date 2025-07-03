@@ -174,11 +174,6 @@ void _startRequestLoop() {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _onButtonPressed,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+     );
   }
 }
