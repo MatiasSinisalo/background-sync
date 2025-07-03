@@ -35,18 +35,21 @@ func downloadImage() error {
 	return err
 }
 
-func setWallpaper(path string) error {
-	cmd := exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file://"+path)
+func runCommand(cmdTemplate string) error {
+	cmdStr := fmt.Sprintf(cmdTemplate, savePath)
+	cmd := exec.Command("bash", "-c", cmdStr)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
-func downloadAndUpdateWallpaper() {
+func downloadAndUpdateWallpaper(commandTemplate string) {
 	fmt.Println("Updating wallpaper...")
 	if err := downloadImage(); err != nil {
 		fmt.Println("Download error:", err)
 		return
 	}
-	if err := setWallpaper(savePath); err != nil {
+	if err := runCommand(commandTemplate); err != nil {
 		fmt.Println("Wallpaper set error:", err)
 	} else {
 		fmt.Println("Wallpaper updated!")
@@ -54,6 +57,15 @@ func downloadAndUpdateWallpaper() {
 }
 
 func main() {
+
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: wallpaper-sync '<command>'")
+		fmt.Println("Example: wallpaper-sync 'gsettings set org.gnome.desktop.background picture-uri file://%s'")
+		os.Exit(1)
+	}
+
+	commandTemplate := os.Args[1]
+
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
@@ -62,7 +74,7 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			downloadAndUpdateWallpaper()
+			downloadAndUpdateWallpaper(commandTemplate)
 			continue
 		}
 	}
