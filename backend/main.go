@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"text/template"
 	"time"
 )
 
@@ -84,6 +86,60 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, filepath.Base(currentPath), info.ModTime(), file)
 }
 
+func imageUploadHandler(w http.ResponseWriter, r *http.Request) {
+
+	r.ParseMultipartForm(10 << 20)
+
+	file, handler, err := r.FormFile("uploadfile")
+	if err != nil {
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	//create and save the file
+	dst, err := os.Create("./static/" + handler.Filename)
+	if err != nil {
+		http.Error(w, "Unable to create the file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		http.Error(w, "Failed to save the file", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "File %s uploaded successfully!", handler.Filename)
+}
+
+func dashboardHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		tmpl := `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Upload File</title></head>
+        <body>
+            <h1>Upload a File</h1>
+            <form method="POST" enctype="multipart/form-data" action="/dashboard">
+                <input type="file" name="uploadfile" />
+                <input type="submit" value="Upload" />
+            </form>
+        </body>
+        </html>`
+		t := template.Must(template.New("upload").Parse(tmpl))
+		t.Execute(w, nil)
+
+	case "POST":
+		imageUploadHandler(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 func main() {
 	lastUpdate = time.Now().Unix()
 	currentPath = "./static/wallpaper2.jpeg"
@@ -91,6 +147,9 @@ func main() {
 
 	log.Println("server started..")
 	http.HandleFunc("/api/wallpaper", imageHandler)
+	http.HandleFunc("/api/wallpaper/add", imageUploadHandler)
+	http.HandleFunc("/dashboard", dashboardHandler)
+
 	fmt.Println("Starting server on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println(err)
