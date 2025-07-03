@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 void main() {
   runApp(const MyApp());
 }
@@ -56,7 +58,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Timer? _timer;
+  String _response = 'Waiting for response...';
+  
   int _counter = 0;
+  
+  
   Future<void> changeWallpaper(String imagePath) async {
   try {
     await Process.run('gsettings', [
@@ -69,6 +76,30 @@ class _MyHomePageState extends State<MyHomePage> {
     print('Error changing wallpaper: $e');
   }
 }
+
+void _startRequestLoop() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      try {
+        final res = await http.get(Uri.parse('http://localhost:8080'));
+        setState(() {
+          _response = res.body;
+        });
+      } catch (e) {
+        setState(() {
+          _response = 'Error: $e';
+        });
+      }
+    });
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    _startRequestLoop();
+  }
+
+
 
   
   void _onButtonPressed() {
@@ -113,10 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          _response,
+          textAlign: TextAlign.center,
             ),
           ],
         ),
