@@ -66,7 +66,7 @@ func main() {
 
 	commandTemplate := os.Args[1]
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
 	fmt.Println("Wallpaper sync started...")
